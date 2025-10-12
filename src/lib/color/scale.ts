@@ -1,12 +1,11 @@
 // Reason: Core OKLCH-based scale generation used by the UI and worker.
 // Reason: Add local type for OKLCH CSS formatting to satisfy TS.
 // Reason: Simplify generation: format OKLCH directly to hex and avoid double parsing.
-import { oklch as toOKLCH, parse, formatCss, oklab as toOKLAB } from "culori";
+import { oklch as toOKLCH, parse, oklab as toOKLAB } from "culori";
 
-import { hexToRgb, rgbToHsl, rgbToHex, ensureHex6Upper, oklchToHex } from "./convert";
+import { hexToRgb, rgbToHsl, oklchToHex } from "./convert";
 
 import type { Rgb, Hsl, Oklch } from "./convert";
-import type { OklchColor } from "culori";
 
 /** A single scale entry with multiple color space representations and name */
 export interface ScaleEntry {
@@ -158,8 +157,6 @@ export function generateScaleDetailed(baseHex: string, opts?: Partial<ScaleOptio
 
     const okColor: Oklch = { l: round(l, 3), c: round(cClamped, 3), h: round(h, 3) };
 
-    // Format OKLCH to HEX with safe fallback via culori.parse of rgb(...)
-    const okCss: OklchColor = { mode: "oklch", l: okColor.l, c: okColor.c, h: okColor.h };
     // Use robust converter-based path to HEX
     const hex: string = oklchToHex({ l: okColor.l, c: okColor.c, h: okColor.h });
     
@@ -184,7 +181,6 @@ export function generateScaleDetailed(baseHex: string, opts?: Partial<ScaleOptio
       let cAdj = okColor.c;
       for (let j = 0; j < 8 && de >= 1.0; j += 1) {
         cAdj = clamp01(cAdj - 0.002);
-        const okCssAdj: OklchColor = { mode: "oklch", l: okColor.l, c: cAdj, h: okColor.h };
         const hexAdj = oklchToHex({ l: okColor.l, c: cAdj, h: okColor.h });
         const labAdj = toOKLAB(parse(hexAdj)!);
 

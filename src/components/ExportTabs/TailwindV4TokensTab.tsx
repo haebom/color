@@ -2,7 +2,7 @@
 import type { JSX } from "react";
 
 export interface TailwindV4TokensTabProps {
-  tokens: Record<string, string>;
+  tokens: Record<string, unknown>;
   onCopy: () => void;
 }
 

@@ -63,7 +63,7 @@ export default function ScaleControls({
   const counts = useMemo(() => Array.from({ length: 11 }, (_, i) => 5 + i), []);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 items-start">
       <label className="flex flex-col gap-2 min-w-0">
         <span className="text-sm">Algorithm</span>
         <select

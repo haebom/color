@@ -3,6 +3,7 @@ import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import ColorPicker from "@/components/ColorPicker";
+import ExportTabs from "@/components/ExportTabs/ExportTabs";
 import ScaleControls from "@/components/ScaleControls";
 import SwatchGrid from "@/components/SwatchGrid";
 import { useClipboard } from "@/hooks/useClipboard";
@@ -86,7 +87,7 @@ export default function ColorGenerator(): JSX.Element {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-start">
         <div className="min-w-0">
           <ColorPicker value={base} onChange={(hex) => update({ base: hex })} label="Base Color" />
         </div>
@@ -123,6 +124,14 @@ export default function ColorGenerator(): JSX.Element {
 
       <section>
         <SwatchGrid entries={entries} />
+      </section>
+
+      <section>
+        <ExportTabs
+          entries={entries.map((e) => ({ name: e.name ?? "", hex: e.hex }))}
+          prefix="primary"
+          onCopyText={write}
+        />
       </section>
     </div>
   );

@@ -3,13 +3,15 @@ import type { JSX } from "react";
 
 export interface SvgExportTabProps {
   colors: ReadonlyArray<string>;
-  onCopy: () => void;
+  onCopyText: (svg: string) => void;
 }
 
 /**
- * SvgExportTab shows an inline SVG grid of swatches.
+ * SvgExportTab renders a compact SVG grid from colors and allows copying the SVG string.
+ * @param colors - List of HEX colors to render as swatches
+ * @param onCopyText - Callback invoked with the generated SVG string
  */
-export default function SvgExportTab({ colors, onCopy }: SvgExportTabProps): JSX.Element {
+export default function SvgExportTab({ colors, onCopyText }: SvgExportTabProps): JSX.Element {
   const size = 24;
   const cols = 8;
   const rows = Math.ceil(colors.length / cols);
@@ -24,7 +26,7 @@ export default function SvgExportTab({ colors, onCopy }: SvgExportTabProps): JSX
     .join("\n")}\n</svg>`;
   return (
     <div className="space-y-2">
-      <button type="button" onClick={onCopy} className="rounded-2xl border px-3 py-2 text-sm">
+      <button type="button" onClick={() => onCopyText(svg)} className="rounded-2xl border px-3 py-2 text-sm">
         Copy SVG
       </button>
       <pre className="rounded-2xl border p-3 text-xs overflow-x-auto">{svg}</pre>
