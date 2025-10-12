@@ -4,12 +4,12 @@ import "@testing-library/jest-dom";
 
 // Mock browser APIs that cause issues in test environment
 // Mock setTimeout/clearTimeout for debounce hooks
-const mockSetTimeout = vi.fn((fn) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+global.setTimeout = vi.fn((fn: any) => {
   fn();
   return 1;
-}) as unknown as typeof setTimeout;
-mockSetTimeout.__promisify__ = vi.fn();
-global.setTimeout = mockSetTimeout;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+}) as any;
 global.clearTimeout = vi.fn();
 
 // Increase test timeout for complex operations
