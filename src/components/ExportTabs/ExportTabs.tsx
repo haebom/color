@@ -26,8 +26,8 @@ export default function ExportTabs({ entries, prefix, onCopyText }: ExportTabsPr
   const svgColors = useMemo(() => entries.map((e) => e.hex), [entries]);
 
   return (
-    <div className="rounded-2xl border shadow-sm bg-white dark:bg-neutral-900">
-      <div className="border-b flex gap-2 p-2" role="tablist" aria-label="Export formats">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Export formats">
         {[
           { id: "css", label: "CSS" },
           { id: "tw", label: "Tailwind" },
@@ -42,13 +42,13 @@ export default function ExportTabs({ entries, prefix, onCopyText }: ExportTabsPr
             role="tab"
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={`rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 ${tab === t.id ? "bg-black/5 dark:bg-white/10" : ""}`}
+            className={`rounded-full border border-neutral-200 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:focus-visible:ring-white/60 ${tab === t.id ? "bg-black text-white dark:bg-neutral-100 dark:text-neutral-900" : "bg-white dark:bg-neutral-800"}`}
           >
             {t.label}
           </button>
         ))}
       </div>
-      <div className="p-3">
+      <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-4 shadow-inner dark:border-neutral-700 dark:bg-neutral-900/60">
         {tab === "css" ? (
           <CssVarsTab css={css} onCopy={() => onCopyText(css)} />
         ) : tab === "tw" ? (

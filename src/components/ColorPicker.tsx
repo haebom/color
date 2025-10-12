@@ -68,10 +68,44 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
     }
   };
 
+  const showHexWarning = space === "hex" && parsedHex === null;
+
   return (
-    <div className="flex flex-col gap-2" key={value}>
-      <span className="text-sm">{label ?? "Base Color"}</span>
-      <div className="flex items-center gap-2" role="tablist" aria-label="Color input space">
+    <div className="flex h-full flex-col gap-5" key={value}>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            {label ?? "Base Color"}
+          </span>
+          <p className="text-2xl font-semibold">{parsedHex ?? raw}</p>
+        </div>
+        <button
+          type="button"
+          onClick={openEyeDropper}
+          disabled={!eyedropperSupported}
+          aria-label="Open eyedropper"
+          className="inline-flex items-center gap-2 rounded-2xl border border-neutral-200 px-3 py-1.5 text-xs font-medium transition hover:-translate-y-0.5 hover:shadow disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:focus-visible:ring-white/60"
+        >
+          Eyedropper
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 shadow-inner dark:border-neutral-700 dark:bg-neutral-800/60">
+        <div className="relative h-36">
+          <div className="absolute inset-0 transition" style={{ backgroundColor: parsedHex ?? value }} />
+          <div className="absolute inset-x-4 bottom-4 flex items-end justify-between text-white">
+            <div className="space-y-1">
+              <span className="text-[11px] uppercase tracking-wider text-white/80">Preview</span>
+              <span className="text-lg font-semibold drop-shadow-sm">{parsedHex ?? value}</span>
+            </div>
+            <span className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-medium text-neutral-900 shadow-sm">
+              {space.toUpperCase()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Color input space">
         {(["hex", "rgb", "hsl", "oklch"] as const).map((k) => (
           <button
             key={k}
@@ -79,28 +113,18 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
             role="tab"
             aria-selected={space === k}
             onClick={() => setSpace(k)}
-            className={`rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 ${space === k ? "bg-black/5 dark:bg-white/10" : ""}`}
+            className={`rounded-2xl border border-neutral-200 px-3 py-1.5 text-xs font-medium transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:focus-visible:ring-white/60 ${space === k ? "bg-black text-white dark:bg-neutral-200 dark:text-neutral-900" : "bg-white dark:bg-neutral-800"}`}
           >
             {k.toUpperCase()}
           </button>
         ))}
-        <button
-          type="button"
-          onClick={openEyeDropper}
-          disabled={false}
-          aria-label="Open eyedropper"
-          className="ml-auto rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 disabled:opacity-50"
-        >
-          Eyedropper
-        </button>
       </div>
 
-      {/* Unified inputs per space */}
       {space === "hex" ? (
-        <div className="grid grid-cols-[auto_1fr] gap-2">
+        <div className="grid grid-cols-[auto_1fr] gap-3">
           <input
             aria-label={label ?? "Base Color"}
-            className="rounded-2xl border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+            className="h-12 rounded-2xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus-visible:ring-white/60"
             type="color"
             value={parsedHex ?? value}
             onChange={(e) => setRaw(e.target.value)}
@@ -110,15 +134,25 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
             inputMode="text"
             placeholder="#RRGGBB"
             aria-label="HEX input"
-            className="rounded-2xl border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+            className="h-12 rounded-2xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus-visible:ring-white/60"
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
           />
         </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-neutral-200 p-4 text-xs text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+          {space.toUpperCase()} 입력은 곧 지원될 예정입니다.
+        </div>
+      )}
+
+      {showHexWarning ? (
+        <div role="status" aria-live="polite" className="text-xs text-red-600">
+          올바른 HEX 값을 입력해주세요.
+        </div>
       ) : null}
 
       {toastMsg ? (
-        <div role="status" aria-live="polite" className="text-xs">
+        <div role="status" aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-300">
           {toastMsg}
         </div>
       ) : null}
