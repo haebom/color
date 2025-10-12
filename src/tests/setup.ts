@@ -44,7 +44,8 @@ Object.defineProperty(navigator, "clipboard", {
 // Mock window.location (needed for URL query parsing)
 if (typeof window !== "undefined") {
   delete (window as unknown as { location?: unknown }).location;
-  window.location = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).location = {
     href: "http://localhost/",
     origin: "http://localhost",
     protocol: "http:",
@@ -57,7 +58,7 @@ if (typeof window !== "undefined") {
     reload: vi.fn(),
     replace: vi.fn(),
     assign: vi.fn(),
-  } as Location;
+  };
 }
 
 // Mock window.history (needed for pushState in ColorGenerator)
