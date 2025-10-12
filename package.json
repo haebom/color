@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "export": "next export",
-    "predeploy": "npm run build && npm run export",
+    "export": "echo 'No-op: static export is configured via output: export in next.config.ts'",
+    "predeploy": "npm run build",
     "deploy": "gh-pages -d out --cname color.oswarld.com --nojekyll",
     "start": "next start",
     "lint": "eslint",
