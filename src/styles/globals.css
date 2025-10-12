@@ -1,0 +1,10 @@
+/* Reason: Central CSS for the upgraded Configurator pages/components. */
+@import "tailwindcss";
+
+:root {
+  --primary-500: #4f46e5;
+  --primary-100: #e0e7ff;
+  --primary-200: #c7d2fe;
+  --primary-700: #3730a3;
+  --on-primary: #ffffff;
+}
