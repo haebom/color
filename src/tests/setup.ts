@@ -7,7 +7,7 @@ import "@testing-library/jest-dom";
 const mockSetTimeout = vi.fn((fn) => {
   fn();
   return 1;
-}) as typeof setTimeout;
+}) as unknown as typeof setTimeout;
 mockSetTimeout.__promisify__ = vi.fn();
 global.setTimeout = mockSetTimeout;
 global.clearTimeout = vi.fn();
