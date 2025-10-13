@@ -63,23 +63,39 @@ export default function ScaleControls({
   const counts = useMemo(() => Array.from({ length: 11 }, (_, i) => 5 + i), []);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 items-start">
-      <label className="flex flex-col gap-2 min-w-0">
-        <span className="text-sm">Algorithm</span>
-        <select
-          value={algorithm}
-          onChange={(e) => onAlgorithmChange(e.target.value as Algorithm)}
-          aria-label="Scale algorithm"
-          className="h-10 w-full rounded-2xl border px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/60"
-        >
-          <option value="tailwind">Tailwind CSS</option>
-          <option value="material">Material-like (placeholder)</option>
-        </select>
-      </label>
+    <div className="flex h-full flex-col gap-6">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="flex flex-col gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Algorithm</span>
+          <select
+            value={algorithm}
+            onChange={(e) => onAlgorithmChange(e.target.value as Algorithm)}
+            aria-label="Scale algorithm"
+            className="h-12 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus-visible:ring-white/60"
+          >
+            <option value="tailwind">Tailwind CSS</option>
+            <option value="material">Material-like (placeholder)</option>
+          </select>
+        </label>
 
-      <div className="flex flex-col gap-2 min-w-0">
-        <span className="text-sm">Contrast (L*) Shift</span>
-        <div className="grid grid-cols-[1fr_auto] gap-2 min-w-0">
+        <label className="flex flex-col gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Shade Count</span>
+          <select
+            value={shadeCount}
+            onChange={(e) => onShadeCountChange(Number(e.target.value))}
+            aria-label="Shade count"
+            className="h-12 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus-visible:ring-white/60"
+          >
+            {counts.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_120px]">
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Contrast (L*) Shift</span>
           <input
             type="range"
             min={-0.25}
@@ -88,8 +104,11 @@ export default function ScaleControls({
             value={parsedShift}
             onChange={(e) => commitShift(Number(e.target.value))}
             aria-label="Global lightness shift"
-            className="h-10 w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/60"
+            className="h-12 w-full rounded-2xl border border-transparent bg-neutral-100 accent-neutral-900 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:bg-neutral-800 dark:accent-neutral-100 dark:focus-visible:ring-white/60"
           />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Shift Value</span>
           <input
             type="number"
             min={-0.25}
@@ -99,60 +118,49 @@ export default function ScaleControls({
             onChange={(e) => commitShift(Number(e.target.value))}
             onKeyDown={onShiftKeyDown}
             aria-label="Global lightness shift input"
-            className="h-10 w-24 rounded-2xl border px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/60"
+            className="h-12 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus-visible:ring-white/60"
           />
         </div>
       </div>
 
-      <label className="flex flex-col gap-2 min-w-0">
-        <span className="text-sm">Shade Count</span>
-        <select
-          value={shadeCount}
-          onChange={(e) => onShadeCountChange(Number(e.target.value))}
-          aria-label="Shade count"
-          className="h-10 w-full rounded-2xl border px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/60"
-        >
-          {counts.map((n) => (
-            <option key={n} value={n}>{n}</option>
-          ))}
-        </select>
+      <div className="flex flex-col gap-3">
+        <span className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Naming pattern</span>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <select
+            value={pattern}
+            onChange={(e) => onPatternChange(e.target.value as NamingPattern)}
+            aria-label="Naming pattern"
+            className="h-12 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus-visible:ring-white/60"
+          >
+            <option value="50-950">50…950</option>
+            <option value="50-900">50…900</option>
+            <option value="custom">Custom</option>
+          </select>
+          {pattern === "custom" ? (
+            <input
+              type="text"
+              value={customNames ?? ""}
+              onChange={(e) => onCustomNamesChange?.(e.target.value)}
+              aria-label="Custom names"
+              placeholder="e.g. Dawn, Noon, Dusk, Night"
+              className="h-12 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus-visible:ring-white/60"
+            />
+          ) : (
+            <div className="hidden lg:block" aria-hidden="true" />
+          )}
+        </div>
+      </div>
+
+      <label className="inline-flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-medium transition focus-within:ring-2 focus-within:ring-black/60 focus-within:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:focus-within:ring-white/60">
+        <input
+          type="checkbox"
+          checked={increaseChromaTowardsDark}
+          onChange={(e) => onIncreaseChromaTowardsDarkChange?.(e.target.checked)}
+          aria-label="Boost chroma toward dark shades"
+          className="h-4 w-4"
+        />
+        Boost chroma toward dark shades
       </label>
-
-      <div className="flex flex-col gap-2 min-w-0">
-        <span className="text-sm">Naming</span>
-        <select
-          value={pattern}
-          onChange={(e) => onPatternChange(e.target.value as NamingPattern)}
-          aria-label="Naming pattern"
-          className="h-10 w-full rounded-2xl border px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/60"
-        >
-          <option value="50-950">50…950</option>
-          <option value="50-900">50…900</option>
-          <option value="custom">Custom</option>
-        </select>
-        {pattern === "custom" ? (
-          <input
-            type="text"
-            value={customNames ?? ""}
-            onChange={(e) => onCustomNamesChange?.(e.target.value)}
-            aria-label="Custom names"
-            placeholder="e.g. Dawn, Noon, Dusk, Night"
-            className="h-10 w-full rounded-2xl border px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/60"
-          />
-        ) : null}
-      </div>
-
-      <div className="sm:col-span-4">
-        <label className="inline-flex items-center gap-2 text-sm focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-black/60 dark:focus-within:ring-white/60 rounded-2xl px-2 py-1">
-          <input
-            type="checkbox"
-            checked={increaseChromaTowardsDark}
-            onChange={(e) => onIncreaseChromaTowardsDarkChange?.(e.target.checked)}
-            aria-label="Boost chroma toward dark shades"
-          />
-          Boost chroma toward dark shades
-        </label>
-      </div>
     </div>
   );
 }

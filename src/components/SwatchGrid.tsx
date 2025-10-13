@@ -25,36 +25,41 @@ export interface SwatchGridProps {
  */
 export default function SwatchGrid({ entries, foreground = "#000000" }: SwatchGridProps): JSX.Element {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
-      {entries.map((e, i) => {
-        const ratio = contrastBadge(foreground, e.hex);
-        const rating = getWcagRating(ratio);
-        const nameLabel = e.name ?? `shade-${i + 1}`;
-        return (
-          <div
-            key={`${e.hex}-${i}`}
-            className="group rounded-2xl overflow-hidden border bg-white shadow-sm dark:bg-neutral-900 dark:border-neutral-800 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-black/60 dark:focus-within:ring-white/60"
-            tabIndex={0}
-            role="button"
-            aria-label={`${nameLabel} ${e.hex} with WCAG ${rating}`}
-          >
-            <div className="relative h-20">
-              <div className="absolute inset-0" style={{ backgroundColor: e.hex }} />
-              {/* name badge */}
-              <span className="absolute left-2 top-2 rounded-full bg-white/85 text-gray-900 dark:bg-white/80 px-2 py-0.5 text-[11px] font-medium shadow-sm ring-1 ring-black/5">
-                {nameLabel}
-              </span>
-              {/* WCAG badge */}
-              <span className="absolute right-2 top-2 rounded-full bg-black/70 text-white px-2 py-0.5 text-[11px] font-semibold">
-                {rating}
-              </span>
-            </div>
-            <div className="p-2 text-[11px] grid grid-cols-1">
-              <span className="font-mono text-gray-900 dark:text-gray-100">{e.hex}</span>
-            </div>
-          </div>
-        );
-      })}
+    <div className="overflow-x-auto pb-2">
+      <div className="grid grid-flow-col auto-cols-[minmax(140px,1fr)] gap-4">
+        {entries.map((e, i) => {
+          const ratio = contrastBadge(foreground, e.hex);
+          const rating = getWcagRating(ratio);
+          const nameLabel = e.name ?? `shade-${i + 1}`;
+          return (
+            <button
+              key={`${e.hex}-${i}`}
+              type="button"
+              className="group relative flex h-48 flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:focus-visible:ring-white/60"
+              aria-label={`${nameLabel} ${e.hex} with WCAG ${rating}`}
+            >
+              <div className="relative flex-1">
+                <div className="absolute inset-0 transition" style={{ backgroundColor: e.hex }} />
+                <div className="absolute inset-x-4 top-4 flex items-center justify-between text-[11px] font-semibold text-neutral-900">
+                  <span className="rounded-full bg-white/85 px-3 py-1 shadow-sm ring-1 ring-black/5 dark:bg-white/80">
+                    {nameLabel}
+                  </span>
+                  <span className="rounded-full bg-black/75 px-3 py-1 text-white shadow-sm">
+                    {rating}
+                  </span>
+                </div>
+                <div className="absolute inset-x-4 bottom-4 flex items-end justify-between text-[11px] font-medium text-white drop-shadow-sm">
+                  <span className="font-mono tracking-wide">{e.hex}</span>
+                  <span>{ratio.toFixed(2)}:1</span>
+                </div>
+              </div>
+              <div className="border-t border-neutral-100 px-4 py-3 text-[11px] uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+                대비 기준 {foreground.toUpperCase()}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

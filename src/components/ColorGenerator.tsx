@@ -86,12 +86,10 @@ export default function ColorGenerator(): JSX.Element {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-start">
-        <div className="min-w-0">
+    <div className="flex flex-col gap-10">
+      <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:p-8">
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <ColorPicker value={base} onChange={(hex) => update({ base: hex })} label="Base Color" />
-        </div>
-        <div className="min-w-0">
           <ScaleControls
             shift={shift}
             shadeCount={steps}
@@ -109,24 +107,36 @@ export default function ColorGenerator(): JSX.Element {
         </div>
       </section>
 
-      <section className="flex items-center justify-between">
-        <div>
-          <button type="button" onClick={onShare} className="rounded-2xl border px-3 py-2 text-sm">
-            Share (Copy URL)
-          </button>
-        </div>
-        {urlToast || copied ? (
-          <div role="status" aria-live="polite" className="text-xs">
-            {urlToast || (copied ? "Copied" : "")}
+      <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:p-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Palette preview</h2>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              {algorithm === "tailwind" ? "Tailwind scale" : "Material-like scale"} · {pattern === "custom" ? "Custom naming" : `Pattern ${pattern}`}
+            </p>
           </div>
-        ) : null}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex items-center gap-2 rounded-2xl border border-neutral-200 px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 hover:shadow focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:focus-visible:ring-white/60"
+            >
+              Share palette
+            </button>
+            {urlToast || copied ? (
+              <div role="status" aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-300">
+                {urlToast || (copied ? "Copied" : "")}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <SwatchGrid entries={entries} />
+        </div>
       </section>
 
-      <section>
-        <SwatchGrid entries={entries} />
-      </section>
-
-      <section>
+      <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:p-8">
         <ExportTabs
           entries={entries.map((e) => ({ name: e.name ?? "", hex: e.hex }))}
           prefix="primary"
