@@ -21,14 +21,8 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
 
   const [gradType, setGradType] = useState<"linear" | "radial">("linear");
   const [angle, setAngle] = useState<number>(90);
-  const [stops, setStops] = useState<Stop[]>(() => {
-    const first = palette[0]?.hex ?? "#4f46e5";
-    const last = palette[palette.length - 1]?.hex ?? "#1f2937";
-    return [
-      { color: first, position: 0 },
-      { color: last, position: 100 },
-    ];
-  });
+  // Keep local stops empty until the user edits; derive from palette meanwhile
+  const [stops, setStops] = useState<Stop[]>([]);
   const [activeStop, setActiveStop] = useState<number>(0);
 
   // Derived default stops from palette; used when user hasn't customized stops yet
@@ -152,6 +146,17 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
                     className="rounded-2xl border px-3 py-1.5 text-xs disabled:opacity-50"
                   >
                     Remove active
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStops([]);
+                      setActiveStop(0);
+                    }}
+                    className="rounded-2xl border px-3 py-1.5 text-xs"
+                    aria-label="Reset stops to palette defaults"
+                  >
+                    Reset stops
                   </button>
                 </div>
               </div>

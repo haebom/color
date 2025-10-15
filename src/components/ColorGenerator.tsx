@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import ColorPicker from "@/components/ColorPicker";
 import ExportTabs from "@/components/ExportTabs/ExportTabs";
@@ -13,19 +13,18 @@ import { generateScaleDetailed } from "@/lib/color/scale";
 import { fromQuery, toQuery } from "@/lib/color/serializer";
 import { usePaletteStore } from "@/store/usePaletteStore";
 
+import type { PaletteState } from "@/store/usePaletteStore";
 import type { JSX } from "react";
 
-export default function ColorGenerator(): JSX.Element {
-  const [state, update] = usePaletteStore();
-  const { base, steps, shift, pattern, customNames, algorithm, inputSpace, increaseChromaTowardsDark } = state;
+export interface ColorGeneratorProps {
+  initial?: Partial<PaletteState>;
+}
 
-  const isHexValid: boolean = /^#([0-9a-fA-F]{6})$/.test(base);
-
-  // Hydrate from URL on first render (client-side only)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+export default function ColorGenerator({ initial }: ColorGeneratorProps): JSX.Element {
+  const computedInitial = useMemo<Partial<PaletteState> | undefined>(() => {
+    if (typeof window === "undefined") return undefined;
     const parsed = fromQuery(window.location.search);
-    update({
+    return {
       base: parsed.baseColor,
       inputSpace: parsed.space,
       steps: parsed.count,
@@ -34,9 +33,14 @@ export default function ColorGenerator(): JSX.Element {
       customNames: parsed.names.join(","),
       algorithm: parsed.algo,
       increaseChromaTowardsDark: parsed.incDark,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    } satisfies Partial<PaletteState>;
   }, []);
+  const [state, update] = usePaletteStore(initial ?? computedInitial);
+  const { base, steps, shift, pattern, customNames, algorithm, inputSpace, increaseChromaTowardsDark } = state;
+
+  const isHexValid: boolean = /^#([0-9a-fA-F]{6})$/.test(base);
+
+  // URL 하이드레이션은 서버 컴포넌트에서 초기 상태를 전달하여 처리합니다.
 
   // Debounce pushState when state changes
   const [urlToast, setUrlToast] = useState<string>("");

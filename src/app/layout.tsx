@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -63,6 +63,9 @@ export const metadata: Metadata = {
       "색상 선택, 스케일 생성, 대비 체크, 내보내기를 한 곳에서 제공하는 패턴 가이드",
     images: ["/tiltle.png"],
   },
+};
+
+export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
