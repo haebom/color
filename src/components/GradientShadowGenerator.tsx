@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
-import { hexToRgb } from "@/lib/color/convert";
 import { useClipboard } from "@/hooks/useClipboard";
+import { hexToRgb } from "@/lib/color/convert";
 
 import type { JSX } from "react";
 
@@ -31,25 +31,26 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
   });
   const [activeStop, setActiveStop] = useState<number>(0);
 
-  useEffect(() => {
-    // When palette changes, refresh defaults for a 2-stop gradient
-    setStops((prev) => {
-      if (prev.length === 2 && prev[0].position === 0 && prev[1].position === 100) {
-        const first = palette[0]?.hex ?? prev[0].color;
-        const last = palette[palette.length - 1]?.hex ?? prev[1].color;
-        return [
-          { color: first, position: 0 },
-          { color: last, position: 100 },
-        ];
-      }
-      return prev;
-    });
+  // Derived default stops from palette; used when user hasn't customized stops yet
+  const defaultStops = useMemo<Stop[]>(() => {
+    const first = palette[0]?.hex ?? "#4f46e5";
+    const last = palette[palette.length - 1]?.hex ?? "#1f2937";
+    return [
+      { color: first, position: 0 },
+      { color: last, position: 100 },
+    ];
   }, [palette]);
 
+  const srcStops = stops.length > 0 ? stops : defaultStops;
+
   const gradientCss = useMemo(() => {
-    const parts = stops.map((s) => `${s.color} ${Math.max(0, Math.min(100, Math.round(s.position)))}%`).join(", ");
-    return gradType === "linear" ? `linear-gradient(${Math.round(angle)}deg, ${parts})` : `radial-gradient(circle, ${parts})`;
-  }, [gradType, angle, stops]);
+    const parts = srcStops
+      .map((s) => `${s.color} ${Math.max(0, Math.min(100, Math.round(s.position)))}%`)
+      .join(", ");
+    return gradType === "linear"
+      ? `linear-gradient(${Math.round(angle)}deg, ${parts})`
+      : `radial-gradient(circle, ${parts})`;
+  }, [gradType, angle, srcStops]);
 
   // Box shadow state
   const [shOffsetX, setShOffsetX] = useState<number>(12);
@@ -73,20 +74,20 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
   }, [shOffsetX, shOffsetY, shBlur, shSpread, rgbaColor]);
 
   const onAddStop = (): void => {
-    const midPos = Math.round(((stops.map((s) => s.position).reduce((a, b) => a + b, 0)) / stops.length) || 50);
-    const pick = palette[Math.floor(palette.length / 2)]?.hex ?? stops[0]?.color ?? "#808080";
+    const basis = srcStops;
+    const midPos = Math.round(((basis.map((s) => s.position).reduce((a, b) => a + b, 0)) / basis.length) || 50);
+    const pick = palette[Math.floor(palette.length / 2)]?.hex ?? basis[0]?.color ?? "#808080";
     const next: Stop = { color: pick, position: Math.max(0, Math.min(100, midPos)) };
-    setStops((prev) => [...prev, next]);
-    setActiveStop(stops.length);
+    setStops([...basis, next]);
+    setActiveStop(basis.length);
   };
 
   const onRemoveStop = (index: number): void => {
-    setStops((prev) => {
-      if (prev.length <= 2) return prev; // keep minimum 2 stops
-      const next = [...prev.slice(0, index), ...prev.slice(index + 1)];
-      return next;
-    });
-    setActiveStop((prev) => Math.max(0, Math.min(stops.length - 2, prev)));
+    const basis = srcStops;
+    if (basis.length <= 2) return; // keep minimum 2 stops
+    const next = [...basis.slice(0, index), ...basis.slice(index + 1)];
+    setStops(next);
+    setActiveStop((prev) => Math.max(0, Math.min(basis.length - 2, prev)));
   };
 
   const copyGradient = async (): Promise<void> => {
@@ -156,7 +157,7 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
               </div>
 
               <div className="space-y-2">
-                {stops.map((s, i) => (
+                {srcStops.map((s, i) => (
                   <div key={`${i}-${s.color}`} className={`grid grid-cols-[auto_1fr_auto] gap-2 items-center ${activeStop === i ? "bg-black/5 dark:bg-white/5 rounded-xl p-2" : ""}`}>
                     <input
                       type="color"
@@ -165,7 +166,10 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
                       onFocus={() => setActiveStop(i)}
                       onChange={(e) => {
                         const next = e.target.value.toUpperCase();
-                        setStops((prev) => prev.map((p, idx) => (idx === i ? { ...p, color: next } : p)));
+                        setStops((prev) => {
+                          const basis = prev.length > 0 ? prev : defaultStops;
+                          return basis.map((p, idx) => (idx === i ? { ...p, color: next } : p));
+                        });
                       }}
                       className="rounded-2xl border px-3 py-2"
                     />
@@ -176,7 +180,10 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
                       value={s.position}
                       onChange={(e) => {
                         const next = Number(e.target.value);
-                        setStops((prev) => prev.map((p, idx) => (idx === i ? { ...p, position: next } : p)));
+                        setStops((prev) => {
+                          const basis = prev.length > 0 ? prev : defaultStops;
+                          return basis.map((p, idx) => (idx === i ? { ...p, position: next } : p));
+                        });
                       }}
                       className="w-full"
                     />
@@ -187,7 +194,10 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
                       value={s.position}
                       onChange={(e) => {
                         const next = Number(e.target.value);
-                        setStops((prev) => prev.map((p, idx) => (idx === i ? { ...p, position: Math.max(0, Math.min(100, next)) } : p)));
+                        setStops((prev) => {
+                          const basis = prev.length > 0 ? prev : defaultStops;
+                          return basis.map((p, idx) => (idx === i ? { ...p, position: Math.max(0, Math.min(100, next)) } : p));
+                        });
                       }}
                       className="rounded-2xl border px-3 py-2 text-sm w-20"
                     />
@@ -205,7 +215,12 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
                         key={`${idx}-${p.hex}`}
                         type="button"
                         title={p.name ?? p.hex}
-                        onClick={() => setStops((prev) => prev.map((pp, i) => (i === activeStop ? { ...pp, color: p.hex } : pp)))}
+                        onClick={() =>
+                          setStops((prev) => {
+                            const basis = prev.length > 0 ? prev : defaultStops;
+                            return basis.map((pp, i) => (i === activeStop ? { ...pp, color: p.hex } : pp));
+                          })
+                        }
                         className="h-6 rounded border"
                         style={{ backgroundColor: p.hex }}
                         aria-label={`Use ${p.name ?? p.hex} for active stop`}

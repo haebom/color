@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import ColorPicker from "@/components/ColorPicker";
 import ExportTabs from "@/components/ExportTabs/ExportTabs";
+import GradientShadowGenerator from "@/components/GradientShadowGenerator";
 import ScaleControls from "@/components/ScaleControls";
 import SwatchGrid from "@/components/SwatchGrid";
-import GradientShadowGenerator from "@/components/GradientShadowGenerator";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useDebounce } from "@/hooks/useDebounce";
 import { generateScaleDetailed } from "@/lib/color/scale";
