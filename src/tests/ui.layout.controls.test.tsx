@@ -14,7 +14,7 @@ describe("ui.layout.controls - Static Analysis", () => {
     const source = readFileSync(filePath, "utf-8");
     
     // Check for responsive grid layout
-    expect(source).toContain("grid grid-cols-1 gap-4 sm:grid-cols-2 items-start");
+    expect(source).toContain("grid grid-cols-1 gap-8 md:grid-cols-2 items-start");
     
     // Check for min-w-0 wrappers to prevent overflow
     const minWCount = (source.match(/min-w-0/g) || []).length;
@@ -30,7 +30,7 @@ describe("ui.layout.controls - Static Analysis", () => {
     const source = readFileSync(filePath, "utf-8");
     
     // Check for responsive grid
-    expect(source).toContain("grid grid-cols-1 gap-3 sm:grid-cols-4 items-start");
+    expect(source).toContain("grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 items-start");
     
     // Check for min-w-0 wrappers
     const minWCount = (source.match(/min-w-0/g) || []).length;

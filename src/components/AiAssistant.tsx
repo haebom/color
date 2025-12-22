@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 
+import SecureInput from "@/components/SecureInput";
 import { generateGradientConfig, suggestNewPalette } from "@/lib/gemini";
 
 import type { GradientConfig } from "@/lib/gemini";
@@ -9,6 +10,7 @@ import type { GradientConfig } from "@/lib/gemini";
 const USAGE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const MAX_USES_PER_USER = 10;
 const MAX_USES_PER_IP = 10;
+const API_KEY_STORAGE_KEY = "gemini_api_key_v1";
 
 type UsageBucket = {
   count: number;
@@ -140,18 +142,32 @@ export default function AiAssistant({
   onUpdateGradient,
 }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
+  const [apiKey, setApiKey] = useState(() => {
+    try {
+      return localStorage.getItem(API_KEY_STORAGE_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<string | null>(null);
+
+  const envKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const effectiveApiKey = apiKey || envKey || "";
 
   const handleSuggestBase = () => {
     startTransition(async () => {
       setResult(null);
+      if (!effectiveApiKey) {
+        setResult("Gemini API Key가 설정되어 있지 않습니다.");
+        return;
+      }
       const limit = await tryConsumeAiUse();
       if (!limit.ok) {
         setResult(limit.message);
         return;
       }
-      const suggestion = await suggestNewPalette(currentBase, prompt);
+      const suggestion = await suggestNewPalette(currentBase, prompt, effectiveApiKey);
       if (suggestion) {
         onUpdateBase(suggestion.base);
         setResult(`Updated base color: ${suggestion.reason}`);
@@ -164,13 +180,17 @@ export default function AiAssistant({
   const handleGenerateGradient = () => {
     startTransition(async () => {
       setResult(null);
+      if (!effectiveApiKey) {
+        setResult("Gemini API Key가 설정되어 있지 않습니다.");
+        return;
+      }
       const limit = await tryConsumeAiUse();
       if (!limit.ok) {
         setResult(limit.message);
         return;
       }
       const colors = palette.map((p) => p.hex);
-      const config = await generateGradientConfig(colors);
+      const config = await generateGradientConfig(colors, effectiveApiKey);
       if (config) {
         onUpdateGradient(config);
         setResult(`Applied gradient: ${config.reason}`);
@@ -192,6 +212,25 @@ export default function AiAssistant({
       </div>
 
       <div className="space-y-3">
+        {!envKey ? (
+          <SecureInput
+            enableMasking
+            type="password"
+            placeholder="Gemini API Key (local only)"
+            value={apiKey}
+            onChange={(e) => {
+              const next = e.target.value;
+              setApiKey(next);
+              try {
+                if (next) localStorage.setItem(API_KEY_STORAGE_KEY, next);
+                else localStorage.removeItem(API_KEY_STORAGE_KEY);
+              } catch {
+                return;
+              }
+            }}
+            className="w-full rounded-xl border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+          />
+        ) : null}
         <input
           type="text"
           placeholder="Describe your goal (e.g., 'Sunset vibes', 'Corporate blue', 'Neon cyberpunk')..."

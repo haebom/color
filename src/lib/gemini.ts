@@ -1,9 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize Gemini client
-// Expects NEXT_PUBLIC_GEMINI_API_KEY to be set in environment variables
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-
 const MODEL_NAME = "gemini-2.5-flash";
 
 export interface GradientConfig {
@@ -26,8 +22,23 @@ export interface PaletteSuggestion {
   reason: string;
 }
 
-export async function generateGradientConfig(palette: string[]): Promise<GradientConfig | null> {
+function getApiKey(apiKey?: string) {
+  return apiKey ?? process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+}
+
+function createClient(apiKey: string) {
+  return new GoogleGenAI({ apiKey });
+}
+
+export async function generateGradientConfig(
+  palette: string[],
+  apiKey?: string,
+): Promise<GradientConfig | null> {
   try {
+    const key = getApiKey(apiKey);
+    if (!key) return null;
+    const ai = createClient(key);
+
     const prompt = `
       You are an expert UI/UX designer.
       Given the following color palette: ${palette.join(", ")}.
@@ -74,8 +85,16 @@ export async function generateGradientConfig(palette: string[]): Promise<Gradien
   }
 }
 
-export async function suggestNewPalette(currentBase: string, request?: string): Promise<PaletteSuggestion | null> {
+export async function suggestNewPalette(
+  currentBase: string,
+  request?: string,
+  apiKey?: string,
+): Promise<PaletteSuggestion | null> {
   try {
+    const key = getApiKey(apiKey);
+    if (!key) return null;
+    const ai = createClient(key);
+
     const prompt = `
       You are an expert color theorist.
       The current base color is ${currentBase}.
