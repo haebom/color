@@ -70,7 +70,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
 
   return (
     <div className="flex flex-col gap-2" key={value}>
-      <span className="text-sm">{label ?? "Base Color"}</span>
+      <span className="text-sm select-none">{label ?? "Base Color"}</span>
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap" role="tablist" aria-label="Color input space">
         {(["hex", "rgb", "hsl", "oklch"] as const).map((k) => (
           <button
@@ -89,7 +89,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
           onClick={openEyeDropper}
           disabled={false}
           aria-label="Open eyedropper"
-          className="basis-full w-full sm:basis-auto sm:w-auto sm:ml-auto mt-2 sm:mt-0 rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 disabled:opacity-50"
+          className="basis-full w-full sm:basis-auto sm:w-auto mt-2 sm:mt-0 rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 disabled:opacity-50"
         >
           Eyedropper
         </button>

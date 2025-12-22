@@ -1,14 +1,18 @@
 "use client";
 import React, { useMemo, useState } from "react";
 
+import AiAssistant from "@/components/AiAssistant";
 import { useClipboard } from "@/hooks/useClipboard";
 import { hexToRgb } from "@/lib/color/convert";
 
+import type { GradientConfig } from "@/lib/gemini";
 import type { JSX } from "react";
 
 export interface GradientShadowGeneratorProps {
   /** Palette colors to use as quick picks */
   palette: ReadonlyArray<{ hex: string; name?: string }>;
+  baseColor: string;
+  onUpdateBase: (base: string) => void;
 }
 
 interface Stop {
@@ -16,7 +20,7 @@ interface Stop {
   position: number; // 0..100
 }
 
-export default function GradientShadowGenerator({ palette }: GradientShadowGeneratorProps): JSX.Element {
+export default function GradientShadowGenerator({ palette, baseColor, onUpdateBase }: GradientShadowGeneratorProps): JSX.Element {
   const { write, copied } = useClipboard();
 
   const [gradType, setGradType] = useState<"linear" | "radial">("linear");
@@ -94,8 +98,27 @@ export default function GradientShadowGenerator({ palette }: GradientShadowGener
     await write(css);
   };
 
+  const handleAiGradientUpdate = (config: GradientConfig) => {
+    setStops(config.stops);
+    setAngle(config.angle);
+    setGradType(config.type);
+    setShOffsetX(config.shadow.offsetX);
+    setShOffsetY(config.shadow.offsetY);
+    setShBlur(config.shadow.blur);
+    setShSpread(config.shadow.spread);
+    setShOpacity(config.shadow.opacity);
+    setShColor(config.shadow.color);
+  };
+
   return (
     <div className="space-y-6">
+      <AiAssistant 
+        currentBase={baseColor}
+        palette={palette}
+        onUpdateBase={onUpdateBase}
+        onUpdateGradient={handleAiGradientUpdate}
+      />
+
       <div className="rounded-2xl border shadow-sm bg-white dark:bg-neutral-900 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">CSS Gradient + Shadow Generator</h2>

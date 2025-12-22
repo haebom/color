@@ -2,6 +2,8 @@
 import React from "react";
 import { useMemo, useState } from "react";
 
+import SecureInput from "@/components/SecureInput";
+
 import type { JSX } from "react";
 
 export type NamingPattern = "50-950" | "50-900" | "custom";
@@ -63,8 +65,8 @@ export default function ScaleControls({
   const counts = useMemo(() => Array.from({ length: 11 }, (_, i) => 5 + i), []);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 items-start">
-      <label className="flex flex-col gap-2 min-w-0">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 items-start">
+      <label className="flex flex-col gap-2 min-w-0 select-none">
         <span className="text-sm">Algorithm</span>
         <select
           value={algorithm}
@@ -104,7 +106,7 @@ export default function ScaleControls({
         </div>
       </div>
 
-      <label className="flex flex-col gap-2 min-w-0">
+      <label className="flex flex-col gap-2 min-w-0 select-none">
         <span className="text-sm">Shade Count</span>
         <select
           value={shadeCount}
@@ -119,7 +121,7 @@ export default function ScaleControls({
       </label>
 
       <div className="flex flex-col gap-2 min-w-0">
-        <span className="text-sm">Naming</span>
+        <span className="text-sm select-none">Naming</span>
         <select
           value={pattern}
           onChange={(e) => onPatternChange(e.target.value as NamingPattern)}
@@ -131,13 +133,13 @@ export default function ScaleControls({
           <option value="custom">Custom</option>
         </select>
         {pattern === "custom" ? (
-          <input
-            type="text"
+          <SecureInput
             value={customNames ?? ""}
             onChange={(e) => onCustomNamesChange?.(e.target.value)}
             aria-label="Custom names"
             placeholder="e.g. Dawn, Noon, Dusk, Night"
             className="h-10 w-full rounded-2xl border px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/60"
+            enableMasking={false}
           />
         ) : null}
       </div>

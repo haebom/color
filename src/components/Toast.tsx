@@ -29,7 +29,7 @@ export default function Toast({ message, duration = 2000 }: ToastProps): JSX.Ele
 
   if (!visible) return null;
   return (
-    <div role="status" aria-live="polite" className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-2xl border bg-white/90 px-3 py-2 text-sm shadow">
+    <div role="status" aria-live="polite" className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-2xl border bg-white/90 px-3 py-2 text-sm shadow z-50">
       {message}
     </div>
   );

@@ -92,7 +92,7 @@ export default function ColorGenerator({ initial }: ColorGeneratorProps): JSX.El
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-start">
+      <section className="grid grid-cols-1 gap-8 md:grid-cols-2 items-start">
         <div className="min-w-0">
           <ColorPicker value={base} onChange={(hex) => update({ base: hex })} label="Base Color" />
         </div>
@@ -140,7 +140,11 @@ export default function ColorGenerator({ initial }: ColorGeneratorProps): JSX.El
       </section>
 
       <section>
-        <GradientShadowGenerator palette={entries} />
+        <GradientShadowGenerator 
+          palette={entries} 
+          baseColor={base}
+          onUpdateBase={(newBase) => update({ base: newBase })}
+        />
       </section>
     </div>
   );
