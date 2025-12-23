@@ -1,6 +1,7 @@
 // Reason: Export tab that renders a Tailwind config preview for users to copy.
-import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
+
+import type { JSX } from "react";
 
 export interface TailwindConfigTabProps {
   configTs: string;

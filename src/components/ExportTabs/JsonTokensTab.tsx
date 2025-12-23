@@ -1,6 +1,7 @@
 // Reason: Export tab to provide vendor-neutral JSON design tokens.
-import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
+
+import type { JSX } from "react";
 
 export interface JsonTokensTabProps {
   json: Record<string, unknown>;

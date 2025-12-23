@@ -1,11 +1,14 @@
 // Reason: Live UI preview components (button/badge) to visualize palette application.
 "use client";
+import { useTranslation } from "react-i18next";
+
 import type { JSX } from "react";
 
 /**
  * LivePreview renders sample UI elements using CSS variables.
  */
 export default function LivePreview(): JSX.Element {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap gap-3">
       <button

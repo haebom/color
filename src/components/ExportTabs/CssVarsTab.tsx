@@ -1,6 +1,7 @@
 // Reason: Export tab to preview and copy CSS variables.
-import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
+
+import type { JSX } from "react";
 
 export interface CssVarsTabProps {
   css: string;

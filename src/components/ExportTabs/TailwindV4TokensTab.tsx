@@ -1,6 +1,7 @@
 // Reason: Export tab for Tailwind v4 tokens preview & copy.
-import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
+
+import type { JSX } from "react";
 
 export interface TailwindV4TokensTabProps {
   tokens: Record<string, unknown>;

@@ -1,7 +1,7 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import ColorGenerator from "@/components/ColorGenerator";
 import ClientOnly from "@/components/ClientOnly";
+import ColorGenerator from "@/components/ColorGenerator";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 import type { JSX } from "react";
 

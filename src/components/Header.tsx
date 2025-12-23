@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
+import React from "react";
 import { useTranslation } from "react-i18next";
+
 import "@/i18n"; // Ensure i18n is initialized
 import LanguageSwitcher from "./LanguageSwitcher";
 

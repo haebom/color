@@ -1,6 +1,7 @@
 // Reason: Export tab that renders SVG swatches for vector-friendly export.
-import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
+
+import type { JSX } from "react";
 
 export interface SvgExportTabProps {
   colors: ReadonlyArray<string>;

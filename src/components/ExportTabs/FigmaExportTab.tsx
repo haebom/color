@@ -1,6 +1,7 @@
 // Reason: Placeholder tab for future Figma plugin/export integration.
-import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
+
+import type { JSX } from "react";
 
 /**
  * FigmaExportTab is a placeholder until actual Figma integration is ready.
