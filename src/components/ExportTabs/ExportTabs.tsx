@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import CssVarsTab from "@/components/ExportTabs/CssVarsTab";
 import FigmaExportTab from "@/components/ExportTabs/FigmaExportTab";
@@ -17,6 +18,7 @@ export interface ExportTabsProps {
 }
 
 export default function ExportTabs({ entries, prefix, onCopyText }: ExportTabsProps): JSX.Element {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<string>("css");
 
   const css = useMemo(() => toCssVariablesFromEntries(prefix, entries), [prefix, entries]);
@@ -25,26 +27,28 @@ export default function ExportTabs({ entries, prefix, onCopyText }: ExportTabsPr
   const jsonTokens = useMemo(() => toJsonTokens(prefix, entries), [prefix, entries]);
   const svgColors = useMemo(() => entries.map((e) => e.hex), [entries]);
 
+  const tabs = [
+    { id: "css", label: t("export.css") },
+    { id: "tw", label: t("export.tailwind") },
+    { id: "tw4", label: t("export.tailwind4") },
+    { id: "json", label: t("export.tokens") },
+    { id: "svg", label: t("export.svg") },
+    { id: "figma", label: t("export.figma") },
+  ];
+
   return (
     <div className="rounded-2xl border shadow-sm bg-white dark:bg-neutral-900">
-      <div className="border-b flex gap-2 p-2" role="tablist" aria-label="Export formats">
-        {[
-          { id: "css", label: "CSS" },
-          { id: "tw", label: "Tailwind" },
-          { id: "tw4", label: "Tailwind 4" },
-          { id: "json", label: "Tokens" },
-          { id: "svg", label: "SVG" },
-          { id: "figma", label: "Figma" },
-        ].map((t) => (
+      <div className="border-b flex gap-2 p-2 overflow-x-auto" role="tablist" aria-label="Export formats">
+        {tabs.map((tabItem) => (
           <button
-            key={t.id}
+            key={tabItem.id}
             type="button"
             role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={`rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 ${tab === t.id ? "bg-black/5 dark:bg-white/10" : ""}`}
+            aria-selected={tab === tabItem.id}
+            onClick={() => setTab(tabItem.id)}
+            className={`whitespace-nowrap rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 ${tab === tabItem.id ? "bg-black/5 dark:bg-white/10" : ""}`}
           >
-            {t.label}
+            {tabItem.label}
           </button>
         ))}
       </div>

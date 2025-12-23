@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import AiAssistant from "@/components/AiAssistant";
 import { useClipboard } from "@/hooks/useClipboard";
@@ -21,6 +22,7 @@ interface Stop {
 }
 
 export default function GradientShadowGenerator({ palette, baseColor, onUpdateBase }: GradientShadowGeneratorProps): JSX.Element {
+  const { t } = useTranslation();
   const { write, copied } = useClipboard();
 
   const [gradType, setGradType] = useState<"linear" | "radial">("linear");
@@ -98,10 +100,11 @@ export default function GradientShadowGenerator({ palette, baseColor, onUpdateBa
     await write(css);
   };
 
-  const handleAiGradientUpdate = (config: GradientConfig) => {
-    setStops(config.stops);
-    setAngle(config.angle);
+  const applyGeminiConfig = (config: GradientConfig) => {
     setGradType(config.type);
+    setAngle(config.angle);
+    setStops(config.stops);
+    
     setShOffsetX(config.shadow.offsetX);
     setShOffsetY(config.shadow.offsetY);
     setShBlur(config.shadow.blur);
@@ -111,41 +114,44 @@ export default function GradientShadowGenerator({ palette, baseColor, onUpdateBa
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-8">
       <AiAssistant 
         currentBase={baseColor}
-        palette={palette}
-        onUpdateBase={onUpdateBase}
-        onUpdateGradient={handleAiGradientUpdate}
+        onSuggestBase={(hex) => onUpdateBase(hex)}
+        onGenerateGradient={applyGeminiConfig}
       />
 
       <div className="rounded-2xl border shadow-sm bg-white dark:bg-neutral-900 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">CSS Gradient + Shadow Generator</h2>
-          {copied ? <span className="text-xs">Copied</span> : null}
-        </div>
-
-        {/* Gradient Controls */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-start">
-          <div className="min-w-0 space-y-3">
-            <div className="flex items-center gap-2" role="tablist" aria-label="Gradient type">
-              {[{ id: "linear", label: "Linear" }, { id: "radial", label: "Radial" }].map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={gradType === t.id}
-                  onClick={() => setGradType(t.id as "linear" | "radial")}
-                  className={`rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 ${gradType === t.id ? "bg-black/5 dark:bg-white/10" : ""}`}
-                >
-                  {t.label}
-                </button>
-              ))}
+        <h3 className="text-lg font-bold mb-6">{t("gradient.title")}</h3>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Controls */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl w-fit">
+              <button
+                onClick={() => setGradType("linear")}
+                className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                  gradType === "linear" ? "bg-white dark:bg-neutral-700 shadow-sm font-semibold" : ""
+                }`}
+              >
+                {t("gradient.linear")}
+              </button>
+              <button
+                onClick={() => setGradType("radial")}
+                className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                  gradType === "radial" ? "bg-white dark:bg-neutral-700 shadow-sm font-semibold" : ""
+                }`}
+              >
+                {t("gradient.radial")}
+              </button>
             </div>
 
-            {gradType === "linear" ? (
+            {gradType === "linear" && (
               <div className="space-y-2">
-                <label className="text-sm">Angle: {Math.round(angle)}°</label>
+                <div className="flex justify-between text-xs">
+                  <span>{t("gradient.angle")}</span>
+                  <span>{angle}°</span>
+                </div>
                 <input
                   type="range"
                   min={0}
@@ -155,175 +161,132 @@ export default function GradientShadowGenerator({ palette, baseColor, onUpdateBa
                   className="w-full"
                 />
               </div>
-            ) : null}
+            )}
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Stops</span>
+                <span className="text-sm font-medium">{t("gradient.stops")}</span>
                 <div className="flex gap-2">
-                  <button type="button" onClick={onAddStop} className="rounded-2xl border px-3 py-1.5 text-xs">Add stop</button>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveStop(activeStop)}
-                    disabled={stops.length <= 2}
-                    className="rounded-2xl border px-3 py-1.5 text-xs disabled:opacity-50"
-                  >
-                    Remove active
+                  <button onClick={onAddStop} className="text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700">
+                    {t("gradient.add_stop")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStops([]);
-                      setActiveStop(0);
-                    }}
-                    className="rounded-2xl border px-3 py-1.5 text-xs"
-                    aria-label="Reset stops to palette defaults"
-                  >
-                    Reset stops
+                  <button onClick={() => setStops([])} className="text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700">
+                    {t("gradient.reset_stops")}
                   </button>
                 </div>
               </div>
-
+              
               <div className="space-y-2">
-                {srcStops.map((s, i) => (
-                  <div key={`${i}-${s.color}`} className={`grid grid-cols-[auto_1fr_auto] gap-2 items-center ${activeStop === i ? "bg-black/5 dark:bg-white/5 rounded-xl p-2" : ""}`}>
+                {srcStops.map((stop, i) => (
+                  <div key={i} className={`flex items-center gap-2 p-2 rounded-xl border ${activeStop === i ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-transparent"}`} onClick={() => setActiveStop(i)}>
                     <input
                       type="color"
-                      aria-label={`Stop ${i + 1} color`}
-                      value={s.color}
-                      onFocus={() => setActiveStop(i)}
+                      value={stop.color}
                       onChange={(e) => {
-                        const next = e.target.value.toUpperCase();
-                        setStops((prev) => {
-                          const basis = prev.length > 0 ? prev : defaultStops;
-                          return basis.map((p, idx) => (idx === i ? { ...p, color: next } : p));
-                        });
+                        const next = [...srcStops];
+                        next[i] = { ...next[i], color: e.target.value };
+                        setStops(next);
                       }}
-                      className="rounded-2xl border px-3 py-2"
+                      className="w-8 h-8 rounded-lg cursor-pointer border-none bg-transparent"
                     />
                     <input
                       type="range"
                       min={0}
                       max={100}
-                      value={s.position}
+                      value={stop.position}
                       onChange={(e) => {
-                        const next = Number(e.target.value);
-                        setStops((prev) => {
-                          const basis = prev.length > 0 ? prev : defaultStops;
-                          return basis.map((p, idx) => (idx === i ? { ...p, position: next } : p));
-                        });
+                        const next = [...srcStops];
+                        next[i] = { ...next[i], position: Number(e.target.value) };
+                        setStops(next);
                       }}
-                      className="w-full"
+                      className="flex-1"
                     />
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={s.position}
-                      onChange={(e) => {
-                        const next = Number(e.target.value);
-                        setStops((prev) => {
-                          const basis = prev.length > 0 ? prev : defaultStops;
-                          return basis.map((p, idx) => (idx === i ? { ...p, position: Math.max(0, Math.min(100, next)) } : p));
-                        });
-                      }}
-                      className="rounded-2xl border px-3 py-2 text-sm w-20"
-                    />
+                    <span className="text-xs w-8 text-right">{Math.round(stop.position)}%</span>
+                    {srcStops.length > 2 && (
+                      <button onClick={(e) => { e.stopPropagation(); onRemoveStop(i); }} className="text-neutral-400 hover:text-red-500">
+                        ×
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
+            </div>
 
-              {/* Quick pick from palette */}
-              {palette.length > 0 ? (
-                <div className="mt-3">
-                  <div className="text-xs mb-1">Quick palette picks</div>
-                  <div className="grid grid-cols-6 gap-1">
-                    {palette.map((p, idx) => (
-                      <button
-                        key={`${idx}-${p.hex}`}
-                        type="button"
-                        title={p.name ?? p.hex}
-                        onClick={() =>
-                          setStops((prev) => {
-                            const basis = prev.length > 0 ? prev : defaultStops;
-                            return basis.map((pp, i) => (i === activeStop ? { ...pp, color: p.hex } : pp));
-                          })
-                        }
-                        className="h-6 rounded border"
-                        style={{ backgroundColor: p.hex }}
-                        aria-label={`Use ${p.name ?? p.hex} for active stop`}
-                      />
-                    ))}
-                  </div>
+            <hr className="border-neutral-200 dark:border-neutral-800" />
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">{t("gradient.box_shadow")}</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-neutral-500">{t("gradient.offset_x")}</label>
+                  <input type="range" min={-50} max={50} value={shOffsetX} onChange={(e) => setShOffsetX(Number(e.target.value))} className="w-full" />
                 </div>
-              ) : null}
+                <div className="space-y-1">
+                  <label className="text-xs text-neutral-500">{t("gradient.offset_y")}</label>
+                  <input type="range" min={-50} max={50} value={shOffsetY} onChange={(e) => setShOffsetY(Number(e.target.value))} className="w-full" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-neutral-500">{t("gradient.blur")}</label>
+                  <input type="range" min={0} max={100} value={shBlur} onChange={(e) => setShBlur(Number(e.target.value))} className="w-full" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-neutral-500">{t("gradient.spread")}</label>
+                  <input type="range" min={-20} max={50} value={shSpread} onChange={(e) => setShSpread(Number(e.target.value))} className="w-full" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-neutral-500">{t("gradient.opacity")}</label>
+                  <input type="range" min={0} max={1} step={0.01} value={shOpacity} onChange={(e) => setShOpacity(Number(e.target.value))} className="w-full" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-neutral-500">{t("gradient.color")}</label>
+                  <input type="color" value={shColor} onChange={(e) => setShColor(e.target.value)} className="w-full h-6" />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Shadow Controls */}
-          <div className="min-w-0 space-y-3">
-            <div className="text-sm">Box Shadow</div>
-            <div>
-              <label className="text-xs">Offset X: {Math.round(shOffsetX)}px</label>
-              <input type="range" min={-64} max={64} value={shOffsetX} onChange={(e) => setShOffsetX(Number(e.target.value))} className="w-full" />
-            </div>
-            <div>
-              <label className="text-xs">Offset Y: {Math.round(shOffsetY)}px</label>
-              <input type="range" min={-64} max={64} value={shOffsetY} onChange={(e) => setShOffsetY(Number(e.target.value))} className="w-full" />
-            </div>
-            <div>
-              <label className="text-xs">Blur: {Math.round(shBlur)}px</label>
-              <input type="range" min={0} max={96} value={shBlur} onChange={(e) => setShBlur(Number(e.target.value))} className="w-full" />
-            </div>
-            <div>
-              <label className="text-xs">Spread: {Math.round(shSpread)}px</label>
-              <input type="range" min={-32} max={32} value={shSpread} onChange={(e) => setShSpread(Number(e.target.value))} className="w-full" />
-            </div>
-            <div>
-              <label className="text-xs">Opacity: {Math.round(shOpacity * 100)}%</label>
-              <input type="range" min={0} max={100} value={Math.round(shOpacity * 100)} onChange={(e) => setShOpacity(Number(e.target.value) / 100)} className="w-full" />
-            </div>
-            <div className="grid grid-cols-[auto_1fr] gap-2 items-center">
-              <input type="color" aria-label="Shadow color" value={shColor} onChange={(e) => setShColor(e.target.value.toUpperCase())} className="rounded-2xl border px-3 py-2" />
-              <div className="grid grid-cols-6 gap-1">
-                {palette.map((p, idx) => (
-                  <button key={`sh-${idx}-${p.hex}`} type="button" title={p.name ?? p.hex} onClick={() => setShColor(p.hex)} className="h-6 rounded border" style={{ backgroundColor: p.hex }} />
+          {/* Preview */}
+          <div className="space-y-6">
+            <div 
+              className="w-full aspect-video rounded-2xl border transition-all duration-300"
+              style={{
+                backgroundImage: gradientCss,
+                boxShadow: boxShadowCss,
+              }}
+            />
+            
+            <div className="space-y-3">
+              <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">{t("gradient.quick_picks")}</h4>
+              <div className="flex flex-wrap gap-2">
+                {palette.map((p) => (
+                  <button
+                    key={p.hex}
+                    onClick={() => setShColor(p.hex)}
+                    className="w-6 h-6 rounded-full border border-black/10 shadow-sm transition-transform hover:scale-110 focus:ring-2 focus:ring-offset-2"
+                    style={{ backgroundColor: p.hex }}
+                    title={p.name}
+                  />
                 ))}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Preview */}
-        <div className="mt-6">
-          <div
-            className="rounded-2xl border shadow-sm p-8 text-sm flex items-center justify-center"
-            style={{ backgroundImage: gradientCss, boxShadow: boxShadowCss }}
-          >
-            <div className="glass p-4 rounded-xl">
-              <div className="text-center">
-                <div>Preview</div>
-                <div className="text-xs opacity-70">background-image + box-shadow</div>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={copyGradient}
+                className="flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-neutral-800 border px-4 py-3 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"
+              >
+                {copied ? t("gradient.copied") : t("gradient.copy_gradient")}
+              </button>
+              <button
+                onClick={copyShadow}
+                className="flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-neutral-800 border px-4 py-3 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"
+              >
+                {copied ? t("gradient.copied") : t("gradient.copy_shadow")}
+              </button>
             </div>
-          </div>
-        </div>
-
-        {/* Export */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 items-start">
-          <div className="min-w-0">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Gradient CSS</span>
-              <button type="button" onClick={copyGradient} className="rounded-2xl border px-3 py-1.5 text-xs">Copy</button>
-            </div>
-            <pre className="rounded-2xl border p-3 mt-2 overflow-auto text-xs"><code>{`background-image: ${gradientCss};`}</code></pre>
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Shadow CSS</span>
-              <button type="button" onClick={copyShadow} className="rounded-2xl border px-3 py-1.5 text-xs">Copy</button>
-            </div>
-            <pre className="rounded-2xl border p-3 mt-2 overflow-auto text-xs"><code>{`box-shadow: ${boxShadowCss};`}</code></pre>
           </div>
         </div>
       </div>

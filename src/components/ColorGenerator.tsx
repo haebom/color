@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 import ColorPicker from "@/components/ColorPicker";
 import ExportTabs from "@/components/ExportTabs/ExportTabs";
@@ -21,6 +23,7 @@ export interface ColorGeneratorProps {
 }
 
 export default function ColorGenerator({ initial }: ColorGeneratorProps): JSX.Element {
+  const { t } = useTranslation();
   const computedInitial = useMemo<Partial<PaletteState> | undefined>(() => {
     if (typeof window === "undefined") return undefined;
     const parsed = fromQuery(window.location.search);
@@ -83,7 +86,7 @@ export default function ColorGenerator({ initial }: ColorGeneratorProps): JSX.El
     const url = typeof window !== "undefined" ? window.location.href : "";
     try {
       await write(url);
-      setUrlToast("Copied");
+      setUrlToast(t("copied"));
       window.setTimeout(() => setUrlToast(""), 1600);
     } catch {
       setUrlToast("");
@@ -117,12 +120,12 @@ export default function ColorGenerator({ initial }: ColorGeneratorProps): JSX.El
       <section className="flex items-center justify-between">
         <div>
           <button type="button" onClick={onShare} className="rounded-2xl border px-3 py-2 text-sm">
-            Share (Copy URL)
+            {t("share_url")}
           </button>
         </div>
         {urlToast || copied ? (
           <div role="status" aria-live="polite" className="text-xs">
-            {urlToast || (copied ? "Copied" : "")}
+            {urlToast || (copied ? t("copied") : "")}
           </div>
         ) : null}
       </section>

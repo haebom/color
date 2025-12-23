@@ -1,5 +1,6 @@
 // Reason: Export tab that renders a Tailwind config preview for users to copy.
 import type { JSX } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface TailwindConfigTabProps {
   configTs: string;
@@ -10,10 +11,11 @@ export interface TailwindConfigTabProps {
  * TailwindConfigTab exposes the generated tailwind.config.ts content.
  */
 export default function TailwindConfigTab({ configTs, onCopy }: TailwindConfigTabProps): JSX.Element {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
       <button type="button" onClick={onCopy} className="rounded-2xl border px-3 py-2 text-sm">
-        Copy tailwind.config.ts
+        {t("copy_tailwind")}
       </button>
       <pre className="rounded-2xl border p-3 text-xs overflow-x-auto">{configTs}</pre>
     </div>

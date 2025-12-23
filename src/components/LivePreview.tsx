@@ -15,9 +15,9 @@ export default function LivePreview(): JSX.Element {
           backgroundColor: "var(--primary-500)",
           color: "var(--on-primary)",
         }}
-        aria-label="Sample button"
+        aria-label={t("aria_sample_button")}
       >
-        Primary Button
+        {t("sample_button")}
       </button>
       <span
         className="inline-flex items-center rounded-2xl px-2.5 py-1 text-xs border"
@@ -26,9 +26,9 @@ export default function LivePreview(): JSX.Element {
           color: "var(--primary-700)",
           borderColor: "var(--primary-200)",
         }}
-        aria-label="Sample badge"
+        aria-label={t("aria_sample_badge")}
       >
-        Badge
+        {t("sample_badge")}
       </span>
     </div>
   );

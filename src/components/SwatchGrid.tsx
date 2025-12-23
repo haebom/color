@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { getWcagRating, contrastBadge } from "@/lib/a11y/wcag";
 

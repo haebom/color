@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import { useTranslation } from "react-i18next";
 
 import SecureInput from "@/components/SecureInput";
 import { generateGradientConfig, suggestNewPalette } from "@/lib/gemini";
@@ -9,7 +10,6 @@ import type { GradientConfig } from "@/lib/gemini";
 
 const USAGE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const MAX_USES_PER_USER = 10;
-const MAX_USES_PER_IP = 10;
 const API_KEY_STORAGE_KEY = "gemini_api_key_v1";
 
 type UsageBucket = {
@@ -59,31 +59,7 @@ function formatRemainingMs(ms: number) {
   return `${hours}h ${minutes}m`;
 }
 
-async function getPublicIp(): Promise<string | null> {
-  try {
-    const cached = sessionStorage.getItem("ai_public_ip_v1");
-    if (cached) return cached;
-  } catch {
-    return null;
-  }
-
-  try {
-    const res = await fetch("https://api.ipify.org?format=json", { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { ip?: unknown };
-    if (typeof data.ip !== "string" || !data.ip) return null;
-    try {
-      sessionStorage.setItem("ai_public_ip_v1", data.ip);
-    } catch {
-      return data.ip;
-    }
-    return data.ip;
-  } catch {
-    return null;
-  }
-}
-
-async function tryConsumeAiUse(): Promise<{ ok: true } | { ok: false; message: string }> {
+async function tryConsumeAiUse(): Promise<{ ok: true } | { ok: false; remainingTime: string }> {
   const now = Date.now();
   const userId = getOrCreateUserId();
 
@@ -97,80 +73,60 @@ async function tryConsumeAiUse(): Promise<{ ok: true } | { ok: false; message: s
   if (userBucket.count >= MAX_USES_PER_USER) {
     return {
       ok: false,
-      message: `사용량 제한에 도달했습니다 (유저당 ${MAX_USES_PER_USER}회/일). ${formatRemainingMs(
-        userBucket.resetAt - now,
-      )} 후 다시 시도하세요.`,
+      remainingTime: formatRemainingMs(userBucket.resetAt - now),
     };
   }
 
-  const ip = await getPublicIp();
-  if (ip) {
-    const ipKey = `ai_usage_ip_v1:${ip}`;
-    const currentIpBucket = readBucket(ipKey);
-    const ipBucket =
-      !currentIpBucket || now >= currentIpBucket.resetAt
-        ? { count: 0, resetAt: now + USAGE_WINDOW_MS }
-        : currentIpBucket;
-
-    if (ipBucket.count >= MAX_USES_PER_IP) {
-      return {
-        ok: false,
-        message: `사용량 제한에 도달했습니다 (IP당 ${MAX_USES_PER_IP}회/일). ${formatRemainingMs(
-          ipBucket.resetAt - now,
-        )} 후 다시 시도하세요.`,
-      };
-    }
-
-    writeBucket(ipKey, { ...ipBucket, count: ipBucket.count + 1 });
-  }
-
-  writeBucket(userKey, { ...userBucket, count: userBucket.count + 1 });
+  writeBucket(userKey, { count: userBucket.count + 1, resetAt: userBucket.resetAt });
   return { ok: true };
 }
 
-interface AiAssistantProps {
+export interface AiAssistantProps {
   currentBase: string;
-  palette: ReadonlyArray<{ hex: string }>;
-  onUpdateBase: (base: string) => void;
-  onUpdateGradient: (config: GradientConfig) => void;
+  onSuggestBase: (hex: string, reason: string) => void;
+  onGenerateGradient: (config: GradientConfig) => void;
 }
 
 export default function AiAssistant({
   currentBase,
-  palette,
-  onUpdateBase,
-  onUpdateGradient,
+  onSuggestBase,
+  onGenerateGradient,
 }: AiAssistantProps) {
-  const [prompt, setPrompt] = useState("");
-  const [apiKey, setApiKey] = useState(() => {
-    try {
-      return localStorage.getItem(API_KEY_STORAGE_KEY) ?? "";
-    } catch {
-      return "";
-    }
-  });
+  const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
+  const [request, setRequest] = useState("");
+  const [apiKey, setApiKey] = useState("");
   const [result, setResult] = useState<string | null>(null);
 
-  const envKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  const effectiveApiKey = apiKey || envKey || "";
+  // Load/Save API key
+  React.useEffect(() => {
+    const stored = localStorage.getItem(API_KEY_STORAGE_KEY);
+    if (stored) setApiKey(stored);
+  }, []);
+
+  const handleApiKeyChange = (val: string) => {
+    setApiKey(val);
+    localStorage.setItem(API_KEY_STORAGE_KEY, val);
+  };
 
   const handleSuggestBase = () => {
+    if (isPending) return;
+    setResult(null);
+
     startTransition(async () => {
-      setResult(null);
-      if (!effectiveApiKey) {
-        setResult("Gemini API Key가 설정되어 있지 않습니다.");
-        return;
+      // Check usage limits if no API key provided
+      if (!apiKey) {
+        const usage = await tryConsumeAiUse();
+        if (!usage.ok) {
+          setResult(usage.message);
+          return;
+        }
       }
-      const limit = await tryConsumeAiUse();
-      if (!limit.ok) {
-        setResult(limit.message);
-        return;
-      }
-      const suggestion = await suggestNewPalette(currentBase, prompt, effectiveApiKey);
+
+      const suggestion = await suggestNewPalette(currentBase, request, apiKey);
       if (suggestion) {
-        onUpdateBase(suggestion.base);
-        setResult(`Updated base color: ${suggestion.reason}`);
+        onSuggestBase(suggestion.base, suggestion.reason);
+        setResult(suggestion.reason);
       } else {
         setResult("Failed to generate suggestion. Please try again.");
       }
@@ -178,64 +134,51 @@ export default function AiAssistant({
   };
 
   const handleGenerateGradient = () => {
+    if (isPending) return;
+    setResult(null);
+
     startTransition(async () => {
-      setResult(null);
-      if (!effectiveApiKey) {
-        setResult("Gemini API Key가 설정되어 있지 않습니다.");
-        return;
+      // Check usage limits if no API key provided
+      if (!apiKey) {
+        const usage = await tryConsumeAiUse();
+        if (!usage.ok) {
+          setResult(usage.message);
+          return;
+        }
       }
-      const limit = await tryConsumeAiUse();
-      if (!limit.ok) {
-        setResult(limit.message);
-        return;
-      }
-      const colors = palette.map((p) => p.hex);
-      const config = await generateGradientConfig(colors, effectiveApiKey);
+
+      const config = await generateGradientConfig(currentBase, request, apiKey);
       if (config) {
-        onUpdateGradient(config);
-        setResult(`Applied gradient: ${config.reason}`);
+        onGenerateGradient(config);
+        setResult(config.reason);
       } else {
-        setResult("Failed to generate gradient. Please try again.");
+        setResult("Failed to generate gradient configuration.");
       }
     });
   };
 
   return (
-    <div className="rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-900/20 p-6 space-y-4">
+    <div className="flex flex-col gap-4 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-indigo-100 dark:border-indigo-900/30">
       <div className="flex items-center gap-2">
-        <div className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-          Gemini AI Assistant
-        </div>
-        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300">
+        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Gemini AI Assistant</span>
+        <span className="text-xs px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
           Beta
         </span>
       </div>
 
-      <div className="space-y-3">
-        {!envKey ? (
-          <SecureInput
-            enableMasking
-            type="password"
-            placeholder="Gemini API Key (local only)"
-            value={apiKey}
-            onChange={(e) => {
-              const next = e.target.value;
-              setApiKey(next);
-              try {
-                if (next) localStorage.setItem(API_KEY_STORAGE_KEY, next);
-                else localStorage.removeItem(API_KEY_STORAGE_KEY);
-              } catch {
-                return;
-              }
-            }}
-            className="w-full rounded-xl border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-          />
-        ) : null}
-        <input
-          type="text"
-          placeholder="Describe your goal (e.g., 'Sunset vibes', 'Corporate blue', 'Neon cyberpunk')..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+      <div className="flex flex-col gap-3">
+        <SecureInput
+          label={t("ai.api_key_label")}
+          value={apiKey}
+          onChange={handleApiKeyChange}
+          placeholder="sk-..."
+        />
+        
+        <textarea
+          rows={2}
+          value={request}
+          onChange={(e) => setRequest(e.target.value)}
+          placeholder={t("ai.placeholder")}
           className="w-full rounded-xl border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
         />
 
@@ -246,7 +189,7 @@ export default function AiAssistant({
             disabled={isPending}
             className="flex-1 rounded-xl bg-white dark:bg-neutral-800 border px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-50 transition-colors shadow-sm"
           >
-            {isPending ? "Thinking..." : "Suggest Base Color"}
+            {isPending ? t("thinking") : t("suggest_base")}
           </button>
           <button
             type="button"
@@ -254,7 +197,7 @@ export default function AiAssistant({
             disabled={isPending}
             className="flex-1 rounded-xl bg-indigo-600 text-white px-4 py-2 text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
           >
-            {isPending ? "Thinking..." : "Generate Gradient & Shadow"}
+            {isPending ? t("thinking") : t("generate_gradient")}
           </button>
         </div>
       </div>

@@ -1,76 +1,50 @@
 "use client";
 import React from "react";
-import { useMemo, useRef, useState } from "react";
-
-import { useDebounce } from "@/hooks/useDebounce";
-import { ensureHex6Upper } from "@/lib/color/convert";
+import { useTranslation } from "react-i18next";
 
 import type { JSX } from "react";
 
-export type PickerSpace = "rgb" | "hsl" | "oklch" | "hex";
-
 export interface ColorPickerProps {
-  /** Current color value as string (e.g. #RRGGBB). */
   value: string;
-  /** Handler when color changes. */
-  onChange: (next: string) => void;
-  /** Optional label for accessibility. */
+  onChange: (hex: string) => void;
   label?: string;
 }
 
-/**
- * ColorPicker renders an accessible color input with:
- * - Input space switcher (RGB/HSL/OKLCH) + HEX
- * - Eyedropper support (if browser supports)
- * - Debounced updates (16~32ms) to parent store
- */
+// Helper for naive hex parsing
+function safeHex(v: string): string | null {
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
+  return null;
+}
+
 export default function ColorPicker({ value, onChange, label }: ColorPickerProps): JSX.Element {
-  const [space, setSpace] = useState<PickerSpace>("hex");
-  const [raw, setRaw] = useState<string>(value);
-  const [toastMsg, setToastMsg] = useState<string>("");
-  const lastParsed = useRef<string>(value);
+  const { t } = useTranslation();
+  const [space, setSpace] = React.useState<"hex" | "rgb" | "hsl" | "oklch">("hex");
+  const [raw, setRaw] = React.useState<string>(value);
 
-  const parsedHex: string | null = useMemo(() => {
+  // Sync internal raw state if prop changes externally
+  React.useEffect(() => {
+    setRaw(value);
+  }, [value]);
+
+  const parsedHex = safeHex(raw);
+
+  const openEyeDropper = async () => {
+    if (!window.EyeDropper) return;
     try {
-      return ensureHex6Upper(raw);
-    } catch {
-      return null;
-    }
-  }, [raw]);
-
-  // Debounce emitting changes
-  useDebounce(
-    () => {
-      if (parsedHex && parsedHex !== lastParsed.current) {
-        lastParsed.current = parsedHex;
-        onChange(parsedHex);
+      const ed = new window.EyeDropper();
+      const result = await ed.open();
+      if (result && result.sRGBHex) {
+        onChange(result.sRGBHex);
+        setRaw(result.sRGBHex);
       }
-    },
-    24,
-    [parsedHex],
-  );
-
-  const eyedropperSupported: boolean = typeof window !== "undefined" && "EyeDropper" in window;
-
-  const openEyeDropper = async (): Promise<void> => {
-    if (!eyedropperSupported) return;
-    const dropperCtor = (window as unknown as { EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> } }).EyeDropper;
-    if (!dropperCtor) return;
-    const dropper = new dropperCtor();
-    try {
-      const result = await dropper.open();
-      setRaw(result.sRGBHex.toUpperCase());
-      setSpace("hex");
-      setToastMsg("Picked color from screen");
-      window.setTimeout(() => setToastMsg(""), 2000);
     } catch {
-      // silently ignore cancellation
+      // ignore
     }
   };
 
   return (
     <div className="flex flex-col gap-2" key={value}>
-      <span className="text-sm select-none">{label ?? "Base Color"}</span>
+      <span className="text-sm select-none">{label ?? t("base_color_label")}</span>
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap" role="tablist" aria-label="Color input space">
         {(["hex", "rgb", "hsl", "oklch"] as const).map((k) => (
           <button
@@ -91,7 +65,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
           aria-label="Open eyedropper"
           className="basis-full w-full sm:basis-auto sm:w-auto mt-2 sm:mt-0 rounded-2xl border px-3 py-1.5 text-xs focus-visible:ring-2 disabled:opacity-50"
         >
-          Eyedropper
+          {t("eyedropper")}
         </button>
       </div>
 
@@ -99,7 +73,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
       {space === "hex" ? (
         <div className="grid grid-cols-[auto_1fr] gap-2">
           <input
-            aria-label={label ?? "Base Color"}
+            aria-label={label ?? t("base_color_label")}
             className="rounded-2xl border px-3 py-2 text-sm outline-none focus-visible:ring-2"
             type="color"
             value={parsedHex ?? value}
@@ -107,21 +81,20 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
           />
           <input
             type="text"
-            inputMode="text"
-            placeholder="#RRGGBB"
-            aria-label="HEX input"
-            className="w-full rounded-2xl border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+            className="rounded-2xl border px-3 py-2 text-sm font-mono outline-none focus-visible:ring-2"
             value={raw}
-            onChange={(e) => setRaw(e.target.value)}
+            onChange={(e) => {
+              setRaw(e.target.value);
+              const v = safeHex(e.target.value);
+              if (v) onChange(v);
+            }}
           />
         </div>
-      ) : null}
-
-      {toastMsg ? (
-        <div role="status" aria-live="polite" className="text-xs">
-          {toastMsg}
+      ) : (
+        <div className="p-4 rounded-2xl border border-dashed text-xs text-neutral-500">
+          {t("coming_soon_input", { space: space.toUpperCase() })}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

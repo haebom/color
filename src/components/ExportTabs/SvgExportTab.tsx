@@ -1,5 +1,6 @@
 // Reason: Export tab that renders SVG swatches for vector-friendly export.
 import type { JSX } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface SvgExportTabProps {
   colors: ReadonlyArray<string>;
@@ -12,6 +13,7 @@ export interface SvgExportTabProps {
  * @param onCopyText - Callback invoked with the generated SVG string
  */
 export default function SvgExportTab({ colors, onCopyText }: SvgExportTabProps): JSX.Element {
+  const { t } = useTranslation();
   const size = 24;
   const cols = 8;
   const rows = Math.ceil(colors.length / cols);
@@ -27,7 +29,7 @@ export default function SvgExportTab({ colors, onCopyText }: SvgExportTabProps):
   return (
     <div className="space-y-2">
       <button type="button" onClick={() => onCopyText(svg)} className="rounded-2xl border px-3 py-2 text-sm">
-        Copy SVG
+        {t("copy_svg")}
       </button>
       <pre className="rounded-2xl border p-3 text-xs overflow-x-auto">{svg}</pre>
     </div>
