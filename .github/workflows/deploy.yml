@@ -35,6 +35,8 @@ jobs:
       #   run: npm test
 
       - name: Build
+        env:
+          NEXT_PUBLIC_GEMINI_API_KEY: ${{ secrets.NEXT_PUBLIC_GEMINI_API_KEY }}
         run: npm run build
 
       - name: Setup Pages

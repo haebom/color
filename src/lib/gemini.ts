@@ -32,6 +32,7 @@ function createClient(apiKey: string) {
 
 export async function generateGradientConfig(
   palette: string[],
+  request?: string,
   apiKey?: string,
 ): Promise<GradientConfig | null> {
   try {
@@ -42,6 +43,7 @@ export async function generateGradientConfig(
     const prompt = `
       You are an expert UI/UX designer.
       Given the following color palette: ${palette.join(", ")}.
+      ${request ? `User request: "${request}"` : ""}
       Create a beautiful, modern CSS gradient and a matching box-shadow using these colors (or slight variations if needed for better aesthetics).
       
       Return a JSON object with this structure:

@@ -5,7 +5,7 @@ import type { NextConfig } from "next";
 // - images.unoptimized: true because GitHub Pages won't run the Next image optimizer
 // - trailingSlash: true to avoid directory index mismatches on static hosts
 const nextConfig: NextConfig = {
-  // output: "export",
+  output: "export",
   images: { unoptimized: true },
   trailingSlash: true,
 };

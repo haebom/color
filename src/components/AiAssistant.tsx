@@ -98,6 +98,9 @@ export default function AiAssistant({
   const [apiKey, setApiKey] = useState("");
   const [result, setResult] = useState<string | null>(null);
 
+  const envApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const hasValidKey = !!apiKey || !!envApiKey;
+
   // Load/Save API key
   React.useEffect(() => {
     const stored = localStorage.getItem(API_KEY_STORAGE_KEY);
@@ -114,11 +117,11 @@ export default function AiAssistant({
     setResult(null);
 
     startTransition(async () => {
-      // Check usage limits if no API key provided
-      if (!apiKey) {
+      // Check usage limits if no API key provided (neither user input nor env)
+      if (!hasValidKey) {
         const usage = await tryConsumeAiUse();
         if (!usage.ok) {
-          setResult(usage.message);
+          setResult(t("ai.usage_limit", { count: MAX_USES_PER_USER, time: usage.remainingTime }));
           return;
         }
       }
@@ -128,7 +131,7 @@ export default function AiAssistant({
         onSuggestBase(suggestion.base, suggestion.reason);
         setResult(suggestion.reason);
       } else {
-        setResult("Failed to generate suggestion. Please try again.");
+        setResult(t("ai.failed_suggestion"));
       }
     });
   };
@@ -139,20 +142,20 @@ export default function AiAssistant({
 
     startTransition(async () => {
       // Check usage limits if no API key provided
-      if (!apiKey) {
+      if (!hasValidKey) {
         const usage = await tryConsumeAiUse();
         if (!usage.ok) {
-          setResult(usage.message);
+          setResult(t("ai.usage_limit", { count: MAX_USES_PER_USER, time: usage.remainingTime }));
           return;
         }
       }
 
-      const config = await generateGradientConfig(currentBase, request, apiKey);
+      const config = await generateGradientConfig([currentBase], request, apiKey);
       if (config) {
         onGenerateGradient(config);
         setResult(config.reason);
       } else {
-        setResult("Failed to generate gradient configuration.");
+        setResult(t("ai.failed_gradient"));
       }
     });
   };
@@ -167,12 +170,22 @@ export default function AiAssistant({
       </div>
 
       <div className="flex flex-col gap-3">
-        <SecureInput
-          label={t("ai.api_key_label")}
-          value={apiKey}
-          onChange={handleApiKeyChange}
-          placeholder="sk-..."
-        />
+        {envApiKey ? (
+          <div className="text-xs text-green-600 dark:text-green-400 font-medium px-1">
+            ✓ Using API Key from environment
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+              {t("ai.api_key_label")}
+            </label>
+            <SecureInput
+              value={apiKey}
+              onChange={(e) => handleApiKeyChange(e.target.value)}
+              placeholder="sk-..."
+            />
+          </div>
+        )}
         
         <textarea
           rows={2}
